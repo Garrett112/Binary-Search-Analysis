@@ -1,8 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <random>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 // Recursive Binary Search
 int recursiveBinarySearch(const vector<int>& arr, int target, int low, int high) {
@@ -55,67 +58,55 @@ int sequentialSearch(const vector<int>& arr, int target) {
 }
 
 int main() {
-    // Test data
-    vector<int> items = { 10, 20, 30, 40, 50, 60, 70 };
-    int target1 = 30; // Item in the list
-    int target2 = 35; // Item not in the list
+    const int N = 50000;
+    double SumRBS = 0.0;
+    double SumIBS = 0.0;
+    double SumSeqS = 0.0;
 
-    // Sort the vector
-    sort(items.begin(), items.end());
+    // Loop to run 10 times
+    for (int loop = 0; loop < 10; ++loop) {
+        vector<int> items;
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<> dis(1, 100);
 
-    // Recursive Binary Search
-    int index = recursiveBinarySearch(items, target1, 0, items.size() - 1);
-    cout << "Recursive Binary Search:" << endl;
-    if (index != -1) {
-        cout << target1 << " found at location " << index << endl;
-    }
-    else {
-        cout << target1 << " was not found." << endl;
-    }
+        // Fill the vector with random numbers
+        for (int i = 0; i < N; ++i) {
+            items.push_back(dis(gen));
+        }
 
-    index = recursiveBinarySearch(items, target2, 0, items.size() - 1);
-    if (index != -1) {
-        cout << target2 << " found at location " << index << endl;
-    }
-    else {
-        cout << target2 << " was not found." << endl;
-    }
+        // Sort the vector
+        sort(items.begin(), items.end());
 
-    // Iterative Binary Search
-    index = iterativeBinarySearch(items, target1);
-    cout << "\nIterative Binary Search:" << endl;
-    if (index != -1) {
-        cout << target1 << " found at location " << index << endl;
-    }
-    else {
-        cout << target1 << " was not found." << endl;
-    }
+        // Generate a random target value within the range of the generated numbers
+        int target = dis(gen);
 
-    index = iterativeBinarySearch(items, target2);
-    if (index != -1) {
-        cout << target2 << " found at location " << index << endl;
-    }
-    else {
-        cout << target2 << " was not found." << endl;
-    }
+        // Recursive Binary Search
+        auto start = high_resolution_clock::now();
+        recursiveBinarySearch(items, target, 0, items.size() - 1);
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        SumRBS += static_cast<double>(duration.count());
 
-    // Sequential Search
-    index = sequentialSearch(items, target1);
-    cout << "\nSequential Search:" << endl;
-    if (index != -1) {
-        cout << target1 << " found at location " << index << endl;
-    }
-    else {
-        cout << target1 << " was not found." << endl;
+        // Iterative Binary Search
+        start = high_resolution_clock::now();
+        iterativeBinarySearch(items, target);
+        stop = high_resolution_clock::now();
+        duration = duration_cast<microseconds>(stop - start);
+        SumIBS += static_cast<double>(duration.count());
+
+        // Sequential Search
+        start = high_resolution_clock::now();
+        sequentialSearch(items, target);
+        stop = high_resolution_clock::now();
+        duration = duration_cast<microseconds>(stop - start);
+        SumSeqS += static_cast<double>(duration.count());
     }
 
-    index = sequentialSearch(items, target2);
-    if (index != -1) {
-        cout << target2 << " found at location " << index << endl;
-    }
-    else {
-        cout << target2 << " was not found." << endl;
-    }
+    // Output average running times
+    cout << "Average Running Time for Recursive Binary Search in microseconds is " << SumRBS / 10 << endl;
+    cout << "Average Running Time for Iterative Binary Search in microseconds is " << SumIBS / 10 << endl;
+    cout << "Average Running Time for Sequential Search in microseconds is " << SumSeqS / 10 << endl;
 
     return 0;
 }
